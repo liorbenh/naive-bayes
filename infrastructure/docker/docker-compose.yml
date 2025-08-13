@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  classifier:
+    build:
+      context: ../..
+      dockerfile: services/classifier/Dockerfile
+      args:
+        - CLASSIFIER_PORT=${CLASSIFIER_PORT}
+    ports:
+      - "${CLASSIFIER_PORT}:${CLASSIFIER_PORT}"
+    env_file:
+      - ../../.env
+    environment:
+      # Override hosts for Docker internal communication
+      - CLASSIFIER_HOST=classifier
+      - MODEL_PIPELINE_MANAGER_HOST=model-pipeline-manager
+    # NOTE: uses bind mount instead of volume - not ideal 
+    # but enough for this ML project demo
+    volumes:
+      - ../../data:/app/data
+      - ../../logs:/app/logs
+    depends_on:
+      - model-pipeline-manager
+
+  model-pipeline-manager:
+    build:
+      context: ../..
+      dockerfile: services/model_pipeline_manager/Dockerfile
+      args:
+        - MODEL_PIPELINE_MANAGER_PORT=${MODEL_PIPELINE_MANAGER_PORT}
+    ports:
+      - "${MODEL_PIPELINE_MANAGER_PORT}:${MODEL_PIPELINE_MANAGER_PORT}"
+    env_file:
+      - ../../.env
+    environment:
+      # Override hosts for Docker internal communication
+      - CLASSIFIER_HOST=classifier
+      - MODEL_PIPELINE_MANAGER_HOST=model-pipeline-manager
+    # NOTE: uses bind mount instead of volume - not ideal 
+    # but enough for this ML project demo
+    volumes: 
+      - ../../data:/app/data
+      - ../../logs:/app/logs
